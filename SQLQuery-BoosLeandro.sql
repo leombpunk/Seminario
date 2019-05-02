@@ -363,3 +363,192 @@ where t.titulo_id = ta.titulo_id and a.autor_id = ta.autor_id
 group by a.autor_nombre
 having count(distinct t.genero) > 1
 order by count(t.genero) desc
+
+--8. Juntas
+/*8.1. Informar las ventas a 60 días. Mostrar el id de título, el título y el total de ventas
+(cantidad por precio). Renombrar a la columna calculada.*/
+select t.titulo_id, t.titulo, (v.cantidad*t.precio) as 'total de ventas'
+from titulos as t inner join ventas as v 
+on t.titulo_id = v.titulo_id
+where v.forma_pago = '60 días'
+
+/*8.2. Informar los autores que hayan escrito varios géneros de libros. Mostrar nombre y
+cantidad de géneros ordenados por esta última columna empezando por el mayor.*/
+select a.autor_nombre, count(distinct t.genero) as 'cantidad de generos'
+from titulos as t inner join titulo_autor as ta
+on t.titulo_id = ta.titulo_id
+inner join autores as a on a.autor_id = ta.autor_id
+group by a.autor_nombre
+having count(distinct t.genero) > 1
+order by count(t.genero) desc
+
+/*8.3. Informar para que editorial ha trabajado cada autor. Mostrar Apellido y nombre del
+autor y nombre de la editorial. Ordenar por Apellido y nombre del autor y nombre de
+la editorial.*/
+select a.autor_apellido, a.autor_nombre, e.editorial_nombre
+from autores as a inner join titulo_autor as ta
+on a.autor_id = ta.autor_id
+inner join titulos as ti on ti.titulo_id = ta.titulo_id
+inner join editoriales as e on e.editorial_id = ti.editorial_id
+
+/*8.4. Informar las ventas por título. Mostrar título, fecha de orden y cantidad, si no tienen
+venta al menos mostrar una fila que indique la cantidad en 0. Ordenar por título y
+mayor cantidad vendida primero.*/
+
+/*8.5. Informar los autores que no tienen títulos. Mostrar nombre y apellido*/
+
+/*8.6. Informar todos los cargos y los empleados que le corresponden de la editorial 'New
+Moon Books', si algún cargo está vacante informar como 'Vacante' en apellido.
+Mostrar descripción del cargo, apellido y nombre. Ordenar por descripción del cargo,
+apellido y nombre.*/
+
+/*8.7. Informar cuantos títulos escribió cada autor inclusive aquellos que no lo hayan hecho
+aún. Mostrar nombre y apellido del autor y cantidad. Ordenar por cantidad mayor
+primero, apellido y nombre.*/
+
+/*8.8. ¿Informar cuantos títulos “Is Anger the Enemy?” vendió cada almacén. Si un almacén
+no tuvo ventas del mismo informar con un cero. Mostrar código de almacén y
+cantidad.*/
+
+/*8.9. Informar los totales de ventas (pesos) al contado entre abril y septiembre del 2014
+por cada almacén. Mostrar nombre de almacén, y total de venta. Si un almacén no
+tiene ventas mostrar en cero.*/
+
+/*8.10. Informar el monto de regalías a pagar por cada autor, inclusive aquellos que no
+tengan ventas, de las ventas del año 2013 de la editorial ‘Binnet & Hardley’. Mostrar
+apellido y nombre del autor y monto a pagar. Tener en cuenta que hay que operar la
+regalía del título y sobre esta la regalía del autor respecto a ese libro.*/
+
+--9. Unión
+/*9.1. Informar las ciudades y estado donde residen los autores, las editoriales y los
+almacenes descartando valores duplicados. Ordenar por nombre de ciudad.*/
+
+/*9.2. Informar cuantos títulos se han publicado primer semestre del 2011 y en el primer
+semestre del 2017. Mostrar dos columnas y dos filas: en la primera columna la
+descripción del periodo y en la segunda la cantidad de títulos.*/
+
+/*9.3. Emitir un informe comparativo entre las ventas del año 2012 y el año 2014. El informe
+debe tener las siguientes columnas: código de título, titulo, año y cantidad de vendida
+en el año (cada uno correspondiente al código de título de la fila correspondiente).
+Tener presente que un título puede tener ventas en un año y no en el otro, en cuyo
+caso debe aparecer igual en el informe el año sin ventas. Ordenar por título y año.*/
+
+--10. Subconsultas
+/*10.1. Informar los títulos que no hayan tenido ventas entre el año 2011 y 2013
+exceptuando los que se hayan publicado posteriormente. Mostrar título, y nombre de
+editorial. Resolver este problema dos veces usando In y Exists*/
+
+/*10.2. Informar las editoriales que no hayan contratados empleados en el año 2010
+excepto que sean Director editorial, Diseñador o Editor. Mostrar nombre de editorial.
+Ordenar.*/
+
+/*10.3. Informar los autores que han hecho algún título juntos. Mostrar los nombres y
+apellidos de a pares, ósea en una misma fila apellido y nombre de un autor seguido de
+apellido y nombre del otro autor. Ordenar por apellido y nombre de un autor seguido
+de apellido y nombre del otro autor.*/
+
+/*10.4. Informar aquellos títulos que hayan tenido alguna venta mejor que las ventas
+del título “Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean”. Mostrar
+título y género. Ordenar por título.*/
+
+/*10.5. Informar los almacenes que hayan vendido más del doble que cualquier otro
+almacén. Mostrar Nombre de almacén y cantidad. Ordenar por mayor venta primero.*/
+
+/*10.6. Informar el almacén o los almacenes que haya vendido más que todos los
+otros. Mostrar Nombre de almacén y cantidad.*/
+
+/*10.7. Informar el o los títulos que se vendieron más que cualquier otro con forma de
+pago a 60 días.*/
+
+/*10.8. Informar cuantos títulos tiene cada autor. Mostrar código de autor, nombre,
+apellido y cantidad de libros.*/
+
+/*10.9. Informar el nivel de cargo más alto alcanzado por algún empleado de cada
+editor. Mostrar Nombre del editor y nivel de cargo. Ordenar por nivel de cargo
+máximo empezando por el mayor.*/
+
+/*10.10. Mostrar los tres primeros géneros más vendidos. Mostrar género y total de
+ventas ordenado por mayor total de venta.*/
+
+/*10.11. Informar los autores que hayan escrito varios géneros de títulos. Mostrar
+nombre y cantidad de géneros ordenados por esta última columna empezando por el
+mayor.*/
+
+/*10.12. Informar cuantos títulos escribió cada autor inclusive aquellos que no lo hayan
+hecho aún. Mostrar nombre y apellido del autor y cantidad. Ordenar por cantidad
+mayor primero, apellido y nombre.*/
+
+/*10.13. Informar el monto de regalías a pagar por cada autor, inclusive aquellos que no
+tengan ventas, de las ventas del año 2013 de la editorial ‘Binnet & Hardley’. Mostrar
+apellido y nombre del autor y monto a pagar. Tener en cuenta que hay que operar la
+regalía del título y sobre esta la regalía del autor respecto a ese libro.*/
+
+--11. Serie libre
+/*11.1. Informar las editoriales que tengan solo tengan como empleado un editor y
+ningún otro cargo.*/
+
+/*11.2. Listar los almacenes que vendieron todos los títulos. Mostrar nombre de
+almacén.*/
+
+/*11.3. Informar los empleados que en su cargo tengan mejor nivel que otros
+empleados en el mismo cargo. Mostrar nombre y apellido del empleado, editorial,
+cargo y nivel de cargo.*/
+
+/*11.4. Informar los títulos que hayan sido “Best sellers” (más vendidos) por cada
+editorial. Puede haber más de un título por editorial. Mostrar nombre de la editorial,
+nombre del título y nombre y apellido el autor principal. Ordenar por nombre de
+editorial y título.*/
+
+/*11.5. Informar cuantas unidades de cada título deben venderse para cubrir el
+adelanto (en concepto de regalías). Mostrar título y cantidad estimada.*/
+
+/*11.6. Informar cuantos géneros tienen en su catálogo cada editorial. Mostrar
+nombre de editorial y cantidad. Ordenar por mayor cantidad de géneros.*/
+
+/*11.7. Informar los almacenes que no han vendido algún título publicado el año 2011.
+Mostrar nombre de almacén y ordenar por esta columna.*/
+
+/*11.8. Informar las ciudades donde existan editoriales, almacenes y autores y cuantos
+son de cada uno. Mostrar nombre de ciudad, estado, la entidad existente (editorial,
+almacén o autor) y la cantidad.*/
+
+--12. Inserción, actualización y borrado.
+/*12.1. Agregar los nuevos autores Facundo Manes (id 541-54-5643) y Mateo Niro (id
+541-25-5641). El primero tiene teléfono 011-4515-9897, dirección Av. Libertador
+2354, CP 10445 y el segundo teléfono 011-4554-7856, dirección Av. De Mayo 564, CP
+10056. Ambos viven en C.A.B.A. (BA) y están contratados.*/
+
+/*12.2. Agregar la editorial Planeta (id 5684) ubicada en C.A.B.A. (BA), Argentina.*/
+
+/*12.3. Agregar el título Usar el cerebro, ID NC5001, género Neurociencia, de la
+editorial Planeta, precio $12, adelanto $3000, regalías 18%, publicado el 1º de marzo
+de 2014. Notas: Conocer nuestra mente para vivir mejor.*/
+
+/*12.4. Agregar al título “Usar el cerebro” los autores Facundo Manes y Mateo Niro en
+ese orden. Para el primero las regalías son 70% y para el segundo 30%.*/
+
+/*12.5. Agregar una venta al almacén 7896 con los siguientes datos:
+Orden JJ3598
+Fecha: 30 de abril del 2015
+Cantidad: 30
+Forma de pago: 30 días
+Título: “Usar el cerebro”*/
+
+/*12.6. Agregar un plan de regalías a cada título que no lo tenga. El rango mínimo será
+cero y el máximo 5000. El porcentaje de regalías establecer en 10.*/
+
+/*12.7. Agregar un plan de regalías a cada título. El rango mínimo será el rango
+máximo actual más uno, el rango máximo será el doble del rango máximo actual y la
+regalía será el máximo actual más dos puntos.*/
+
+/*12.8. Subir en un 10% los precios de los títulos de la editorial Algodata Infosystems
+12.9. A aquellos empleados que en su cargo están en el nivel mínimo (rango inferior)
+subirle a la al punto medio.*/
+
+/*12.10. Cambiar el cargo de los “editores” a “director editorial” a aquellos editores que
+están a por lo menos 15 puntos del nivel máximo.*/
+
+/*12.11. Borrar los autores que no fueron contratados.*/
+
+/*12.12. Borrar el título “Usar el cerebro”. Para poder completar esta operación borrar
+las filas relacionas den las distintas tablas mediante subconsulta.*/
