@@ -395,7 +395,7 @@ inner join editoriales as e on e.editorial_id = ti.editorial_id
 venta al menos mostrar una fila que indique la cantidad en 0. Ordenar por título y
 mayor cantidad vendida primero.*/
 select titulo
-from titulos --resulta 18 filas
+from titulos --resulta 18 filas/titulos
 
 select t.titulo, sum(isnull(v.cantidad,0)) as cantidad, fecha_orden
 from titulos as t left outer join ventas as v on t.titulo_id = v.titulo_id
@@ -408,10 +408,10 @@ from autores as a --son 23 autores
 
 select a.autor_nombre, a.autor_apellido
 from autores as a inner join titulo_autor as ta on a.autor_id = ta.autor_id
-group by autor_nombre, a.autor_apellido --19 autores tienen titulos, 4 no escribieron nada
+group by autor_nombre, a.autor_apellido --19 autores tienen titulos, entonces 4 no escribieron nada
 
 select a.autor_nombre, a.autor_apellido
-from autores as a left/*con full tambien funciona*/ outer join titulo_autor as ta on a.autor_id = ta.autor_id
+from autores as a left outer join titulo_autor as ta on a.autor_id = ta.autor_id --con full tambien funciona
 where ta.titulo_id is null
 
 /*8.6. Informar todos los cargos y los empleados que le corresponden de la editorial 'New
@@ -466,7 +466,17 @@ group by almacen_nombre
 tengan ventas, de las ventas del año 2013 de la editorial ‘Binnet & Hardley’. Mostrar
 apellido y nombre del autor y monto a pagar. Tener en cuenta que hay que operar la
 regalía del título y sobre esta la regalía del autor respecto a ese libro.*/
+select a.autor_nombre, a.autor_apellido
+from autores as a --son 23 autores
 
+select a.autor_apellido, a.autor_nombre, sum(isnull((t.precio*v.cantidad),0)) as monto_regalia
+from ventas as v inner join titulos as t on v.titulo_id = t.titulo_id 
+	and YEAR(v.fecha_orden) = 2013 --ventas |r| titulos
+inner join editoriales as ed on ed.editorial_id = t.editorial_id 
+	and ed.editorial_nombre = 'Binnet & Hardley' --editoriales |r| titulos
+inner join titulo_autor as ta on ta.titulo_id = t.titulo_id --titulos |r| titulo_autor
+right outer join autores as a on a.autor_id = ta.autor_id --autores |r| titulo_autor
+group by autor_apellido, autor_nombre
 
 --9. Unión
 /*9.1. Informar las ciudades y estado donde residen los autores, las editoriales y los
