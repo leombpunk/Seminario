@@ -52,11 +52,24 @@ where edi.editorial_id not in(
 apellidos de a pares, ósea en una misma fila apellido y nombre de un autor seguido de
 apellido y nombre del otro autor. Ordenar por apellido y nombre de un autor seguido
 de apellido y nombre del otro autor.*/
+select * 
+from titulo_autor
+order by titulo_id
 
 /*10.4. Informar aquellos títulos que hayan tenido alguna venta mejor que las ventas
 del título “Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean”. Mostrar
 título y género. Ordenar por título.*/
-
+--select t.titulo, t.genero
+--from titulos as t
+--inner join ventas as v on t.titulo_id = v.titulo_id
+--group by t.titulo_id, t.titulo, t.genero
+--having sum(t.precio*v.cantidad) > some(
+--	select sum(t.precio*v.cantidad)
+--	from ventas as v
+--	where t.titulo_id = v.titulo_id 
+--	and t.titulo = 'Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'	
+--	)
+--order by t.titulo
 /*10.5. Informar los almacenes que hayan vendido más del doble que cualquier otro
 almacén. Mostrar Nombre de almacén y cantidad. Ordenar por mayor venta primero.*/
 
