@@ -1,4 +1,5 @@
 use editorial
+go
 /*Comandos del Lenguaje de Manipulación de Datos o DML
 (Data Manipulation Languaje)*/
 --1 Consultas básicas
@@ -391,6 +392,15 @@ group by a.autor_id, a.autor_nombre
 having count(distinct t.genero) > 1
 order by count(t.genero) desc
 
+--correccion
+select a.autor_nombre, count(distinct t.genero) as 'cantidad de generos'
+from titulos as t inner join titulo_autor as ta
+on t.titulo_id = ta.titulo_id
+inner join autores as a on a.autor_id = ta.autor_id
+group by a.autor_id, a.autor_nombre
+having count(distinct t.genero) > 1
+order by [cantidad de generos] desc
+
 /*8.3. Informar para que editorial ha trabajado cada autor. Mostrar Apellido y nombre del
 autor y nombre de la editorial. Ordenar por Apellido y nombre del autor y nombre de
 la editorial.*/
@@ -399,6 +409,14 @@ from autores as a inner join titulo_autor as ta
 on a.autor_id = ta.autor_id
 inner join titulos as ti on ti.titulo_id = ta.titulo_id
 inner join editoriales as e on e.editorial_id = ti.editorial_id
+
+--correccion
+select distinct a.autor_apellido, a.autor_nombre, e.editorial_nombre
+from autores as a inner join titulo_autor as ta
+on a.autor_id = ta.autor_id
+inner join titulos as ti on ti.titulo_id = ta.titulo_id
+inner join editoriales as e on e.editorial_id = ti.editorial_id
+order by a.autor_apellido, a.autor_nombre, e.editorial_nombre
 
 /*8.4. Informar las ventas por título. Mostrar título, fecha de orden y cantidad, si no tienen
 venta al menos mostrar una fila que indique la cantidad en 0. Ordenar por título y
@@ -409,6 +427,16 @@ from titulos --resulta 18 filas/titulos
 select *
 from ventas --23 titulos vendidos
 
+select t.titulo, sum(isnull(v.cantidad,0)) as cantidad_ventas, max(v.fecha_orden) as fecha_de_orden
+from titulos as t left outer join ventas as v on t.titulo_id = v.titulo_id
+group by t.titulo_id, t.titulo
+order by cantidad_ventas desc, t.titulo
+
+--correccion
+--fecha de orden en este caso no aplicar el max y agregarlo al group by 
+--y dejar los 21 registros que salen xd
+--isnull(sum(v.cantidad,0)) as cantidad_ventas
+--dejar el codigo original agregar el codigo modificado
 select t.titulo, sum(isnull(v.cantidad,0)) as cantidad_ventas, max(v.fecha_orden) as fecha_de_orden
 from titulos as t left outer join ventas as v on t.titulo_id = v.titulo_id
 group by t.titulo_id, t.titulo
@@ -443,12 +471,25 @@ on e.editorial_id = ed.editorial_id and ed.editorial_nombre = 'New Moon Books'
 right outer join cargos as c on c.cargo_id = e.cargo_id -- con full tambien funciona
 --where ed.editorial_nombre = 'New Moon Books'
 
+--correccion
+select c.cargo_descripcion, isnull(e.apellido,'Vacante') as empleado, e.nombre
+from empleados as e inner join editoriales as ed 
+on e.editorial_id = ed.editorial_id and ed.editorial_nombre = 'New Moon Books'
+right outer join cargos as c on c.cargo_id = e.cargo_id
+order by c.cargo_descripcion, empleado, e.nombre
+
 /*8.7. Informar cuantos títulos escribió cada autor inclusive aquellos que no lo hayan hecho
 aún. Mostrar nombre y apellido del autor y cantidad. Ordenar por cantidad mayor
 primero, apellido y nombre.*/
 select a.autor_apellido,a.autor_nombre, count(titulo_id) as cantidad
 from autores as a left outer join titulo_autor as ta on a.autor_id = ta.autor_id
 group by a.autor_id ,autor_apellido, a.autor_nombre
+
+--correccion
+select a.autor_apellido,a.autor_nombre, count(titulo_id) as cantidad
+from autores as a left outer join titulo_autor as ta on a.autor_id = ta.autor_id
+group by a.autor_id ,autor_apellido, a.autor_nombre
+order by cantidad, a.autor_apellido, a.autor_nombre
 
 /*8.8. ¿Informar cuantos títulos “Is Anger the Enemy?” vendió cada almacén. Si un almacén
 no tuvo ventas del mismo informar con un cero. Mostrar código de almacén y
@@ -474,6 +515,14 @@ and v.forma_pago = 'Al contado' and ((MONTH(v.fecha_orden) >= 4 and MONTH(v.fech
 and YEAR(v.fecha_orden) = 2014)
 group by a.almacen_id ,almacen_nombre
 
+--correccion
+select a.almacen_nombre, sum(isnull((ti.precio*v.cantidad),0)) as cantidad
+from ventas as v inner join titulos as ti on v.titulo_id = ti.titulo_id
+right outer join almacenes as a on a.almacen_id = v.almacen_id 
+and v.forma_pago = 'Al contado' and month(v.fecha_orden) between 4 and 9
+and YEAR(v.fecha_orden) = 2014
+group by a.almacen_id ,almacen_nombre
+
 /*8.10. Informar el monto de regalías a pagar por cada autor, inclusive aquellos que no
 tengan ventas, de las ventas del año 2013 de la editorial ‘Binnet & Hardley’. Mostrar
 apellido y nombre del autor y monto a pagar. Tener en cuenta que hay que operar la
@@ -488,6 +537,18 @@ inner join editoriales as ed on ed.editorial_id = t.editorial_id
 	and ed.editorial_nombre = 'Binnet & Hardley' --editoriales |r| titulos
 inner join titulo_autor as ta on ta.titulo_id = t.titulo_id --titulos |r| titulo_autor
 right outer join autores as a on a.autor_id = ta.autor_id --autores |r| titulo_autor
+group by a.autor_id, autor_apellido, autor_nombre
+
+--correccion
+--corregido el calculo de la regalia por autor segun el libro y la mar en coche xd
+select a.autor_apellido, a.autor_nombre, 
+sum(t.precio * v.cantidad * t.regalias / 100 * ta.porcentaje_regalias / 100) as monto_regalia
+from ventas as v inner join titulos as t on v.titulo_id = t.titulo_id 
+	and YEAR(v.fecha_orden) = 2013 --ventas |r| titulos
+inner join editoriales as ed on ed.editorial_id = t.editorial_id 
+	and ed.editorial_nombre = 'Binnet & Hardley' --editoriales |r| titulos
+inner join titulo_autor as ta on ta.titulo_id = t.titulo_id --titulos |r| titulo_autor
+right join autores as a on a.autor_id = ta.autor_id --autores |r| titulo_autor
 group by a.autor_id, autor_apellido, autor_nombre
 
 --9. Unión
@@ -517,6 +578,15 @@ select periodo='primer semestre del 2017',COUNT(*) as cantidad_de_titulos_public
 from titulos as t
 where MONTH(fecha_publicacion) between 1 and 6 and YEAR(fecha_publicacion)=2017
 
+--correccion
+select periodo='primer semestre del 2011',COUNT(*) as cantidad_de_titulos_publicados
+from titulos as t
+where MONTH(fecha_publicacion) between 1 and 6 and YEAR(fecha_publicacion)=2011
+union
+select 'primer semestre del 2017',COUNT(*)
+from titulos as t
+where MONTH(fecha_publicacion) between 1 and 6 and YEAR(fecha_publicacion)=2017
+
 /*9.3. Emitir un informe comparativo entre las ventas del año 2012 y el año 2014. El informe
 debe tener las siguientes columnas: código de título, titulo, año y cantidad de vendida
 en el año (cada uno correspondiente al código de título de la fila correspondiente).
@@ -532,23 +602,86 @@ from titulos as t left outer join ventas as v on t.titulo_id = v.titulo_id and y
 group by t.titulo_id, t.titulo
 order by t.titulo, anio
 
+--correccion
+select t.titulo_id, t.titulo, sum(v.cantidad) as cantidad_ventas, anio = 2012
+from titulos as t left join ventas as v on t.titulo_id = v.titulo_id and year(fecha_orden)=2012
+group by t.titulo_id, t.titulo
+union
+select t.titulo_id, t.titulo, sum(v.cantidad), 2014
+from titulos as t left join ventas as v on t.titulo_id = v.titulo_id and year(fecha_orden)=2014
+group by t.titulo_id, t.titulo
+order by t.titulo, anio
+
 --10. Subconsultas
 /*10.1. Informar los títulos que no hayan tenido ventas entre el año 2011 y 2013
 exceptuando los que se hayan publicado posteriormente. Mostrar título, y nombre de
 editorial. Resolver este problema dos veces usando In y Exists*/
+select titulo from titulos --18 titulos
 
-/*10.2. Informar las editoriales que no hayan contratados empleados en el año 2010
+select distinct t.titulo 
+from titulos as t 
+inner join ventas as v on v.titulo_id = t.titulo_id --2 titulos no tiene ventas sin evaluar el rango en años
+
+--In
+select t.titulo, e.editorial_nombre
+from titulos as t
+inner join editoriales as e on e.editorial_id = t.editorial_id
+where t.titulo_id not in(
+	select distinct v.titulo_id
+	from ventas as v
+	where year(v.fecha_orden) between 2011 and 2013)--13 de 18 titulos se vendieron en este rango de años
+order by t.titulo
+
+--Exists
+select t.titulo, e.editorial_nombre
+from titulos as t
+inner join editoriales as e on e.editorial_id = t.editorial_id
+where not exists(
+	select 1
+	from ventas as v
+	where year(v.fecha_orden) between 2011 and 2013 and t.titulo_id=v.titulo_id)
+order by t.titulo
+
+/*10.2. Informar las editoriales que no hayan contratado empleados en el año 2010
 excepto que sean Director editorial, Diseñador o Editor. Mostrar nombre de editorial.
 Ordenar.*/
+select editorial_nombre 
+from editoriales --8 editoriales
+
+select cargo_descripcion
+from cargos --14 cargos
+
+select edi.editorial_nombre
+from editoriales as edi
+where edi.editorial_id not in(
+	select e.editorial_id
+	from empleados as e 
+	inner join cargos as c on c.cargo_id = e.cargo_id 
+		and c.cargo_descripcion in('Director editorial','Diseñador','Editor')
+	where year(e.fecha_contratacion) = 2010)
 
 /*10.3. Informar los autores que han hecho algún título juntos. Mostrar los nombres y
 apellidos de a pares, ósea en una misma fila apellido y nombre de un autor seguido de
 apellido y nombre del otro autor. Ordenar por apellido y nombre de un autor seguido
 de apellido y nombre del otro autor.*/
+select * 
+from titulo_autor
+order by titulo_id
 
 /*10.4. Informar aquellos títulos que hayan tenido alguna venta mejor que las ventas
 del título “Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean”. Mostrar
 título y género. Ordenar por título.*/
+--select t.titulo, t.genero
+--from titulos as t
+--inner join ventas as v on t.titulo_id = v.titulo_id
+--group by t.titulo_id, t.titulo, t.genero
+--having sum(t.precio*v.cantidad) > some(
+--	select sum(t.precio*v.cantidad)
+--	from ventas as v
+--	where t.titulo_id = v.titulo_id 
+--	and t.titulo = 'Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'	
+--	)
+--order by t.titulo
 
 /*10.5. Informar los almacenes que hayan vendido más del doble que cualquier otro
 almacén. Mostrar Nombre de almacén y cantidad. Ordenar por mayor venta primero.*/
