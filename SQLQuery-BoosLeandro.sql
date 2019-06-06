@@ -551,6 +551,19 @@ inner join titulo_autor as ta on ta.titulo_id = t.titulo_id --titulos |r| titulo
 right join autores as a on a.autor_id = ta.autor_id --autores |r| titulo_autor
 group by a.autor_id, autor_apellido, autor_nombre
 
+--correccion de la correccion
+--el 8.10 esta re-copado, lindo para fedear en el parcial
+select a.autor_apellido, a.autor_nombre, 
+sum(t.precio * v.cantidad * t.regalias / 100 * ta.porcentaje_regalias / 100) as monto_regalia
+from autores as a 
+inner join titulo_autor as ta on ta.autor_id = a.autor_id --autores |r| titulo_autor
+inner join titulos as t on ta.titulo_id = t.titulo_id --titulos |r| titulo_autor
+inner join editoriales as ed on ed.editorial_id = t.editorial_id 
+	and ed.editorial_nombre = 'Binnet & Hardley' --editoriales |r| titulos
+left join ventas as v on v.titulo_id = ta.titulo_id
+	and YEAR(v.fecha_orden) = 2013 --ventas |r| autores
+group by a.autor_id, autor_apellido, autor_nombre
+
 --9. Unión
 /*9.1. Informar las ciudades y estado donde residen los autores, las editoriales y los
 almacenes descartando valores duplicados. Ordenar por nombre de ciudad.*/
@@ -642,6 +655,29 @@ where not exists(
 	where year(v.fecha_orden) between 2011 and 2013 and t.titulo_id=v.titulo_id)
 order by t.titulo
 
+--correccion
+--In
+select t.titulo, e.editorial_nombre
+from titulos as t
+inner join editoriales as e on e.editorial_id = t.editorial_id
+where t.titulo_id not in(
+	select distinct v.titulo_id
+	from ventas as v
+	where year(v.fecha_orden) between 2011 and 2013)--13 de 18 titulos se vendieron en este rango de años
+	and year(t.fecha_publicacion) < 2014 
+--order by t.titulo
+
+--Exists
+select t.titulo, e.editorial_nombre
+from titulos as t
+inner join editoriales as e on e.editorial_id = t.editorial_id
+where not exists(
+	select 1
+	from ventas as v
+	where year(v.fecha_orden) between 2011 and 2013 and t.titulo_id=v.titulo_id)
+	and year(t.fecha_publicacion) < 2014 
+--order by t.titulo
+
 /*10.2. Informar las editoriales que no hayan contratado empleados en el año 2010
 excepto que sean Director editorial, Diseñador o Editor. Mostrar nombre de editorial.
 Ordenar.*/
@@ -660,6 +696,16 @@ where edi.editorial_id not in(
 		and c.cargo_descripcion in('Director editorial','Diseñador','Editor')
 	where year(e.fecha_contratacion) = 2010)
 
+--correccion
+select edi.editorial_nombre
+from editoriales as edi
+where edi.editorial_id not in(
+	select e.editorial_id
+	from empleados as e 
+	inner join cargos as c on c.cargo_id = e.cargo_id 
+		and c.cargo_descripcion not in('Director editorial','Diseñador','Editor')
+	where year(e.fecha_contratacion) = 2010)
+
 /*10.3. Informar los autores que han hecho algún título juntos. Mostrar los nombres y
 apellidos de a pares, ósea en una misma fila apellido y nombre de un autor seguido de
 apellido y nombre del otro autor. Ordenar por apellido y nombre de un autor seguido
@@ -668,26 +714,117 @@ select *
 from titulo_autor
 order by titulo_id
 
+--solucion 
+select t1.autor_id, t2.autor_id
+from titulo_autor as t1, titulo_autor as t2
+--los 2 where son validos, producen el mismo resultado
+where t1.titulo_id = t2.titulo_id
+	and t1.autor_id < t2.autor_id
+/*where t1.titulo_id = t2.titulo_id
+	and t1.autor_id <> t2.autor_id
+	and t1.autor_orden > t2.autor_orden*/
+
+select a1.autor_apellido, a1.autor_nombre, a2.autor_apellido, a2.autor_nombre
+from autores as a1, autores as a2,(
+	select t1.autor_id as autor1, t2.autor_id as autor2
+	from titulo_autor as t1, titulo_autor as t2
+	--los 2 where son validos, producen el mismo resultado
+	where t1.titulo_id = t2.titulo_id
+		and t1.autor_id < t2.autor_id
+	) as ta
+where ta.autor1 = a1.autor_id and ta.autor2 = a2.autor_id
+order by a1.autor_apellido, a1.autor_nombre, a2.autor_apellido, a2.autor_nombre
+
 /*10.4. Informar aquellos títulos que hayan tenido alguna venta mejor que las ventas
 del título “Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean”. Mostrar
 título y género. Ordenar por título.*/
+
+--primer intento
 --select t.titulo, t.genero
 --from titulos as t
 --inner join ventas as v on t.titulo_id = v.titulo_id
---group by t.titulo_id, t.titulo, t.genero
---having sum(t.precio*v.cantidad) > some(
+--where sum(t.precio*v.cantidad) > some(
 --	select sum(t.precio*v.cantidad)
 --	from ventas as v
 --	where t.titulo_id = v.titulo_id 
 --	and t.titulo = 'Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'	
 --	)
+--group by t.titulo_id, t.titulo, t.genero
 --order by t.titulo
+
+--sub 1
+select v.titulo_id as t1id, sum(v.cantidad*ti.precio) as cantidad1
+from ventas as v
+inner join titulos as ti on ti.titulo_id = v.titulo_id 
+	and ti.titulo='Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'
+group by v.titulo_id
+
+--sub 2
+select v.titulo_id as t2id, sum(v.cantidad*ti.precio) as cantidad2
+from ventas as v
+inner join titulos as ti on ti.titulo_id = v.titulo_id 
+	and ti.titulo<>'Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'
+group by v.titulo_id
+--having sum(v.cantidad*ti.precio) >= 838
+
+--consulta final ¿?
+select /*t.titulo_id,*/ t.titulo, t.genero
+from titulos as t,(
+	select v.titulo_id as t1id, sum(v.cantidad*ti.precio) as cantidad1
+	from ventas as v
+	inner join titulos as ti on ti.titulo_id = v.titulo_id 
+		and ti.titulo='Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'
+	group by v.titulo_id
+	) as v1, (select v.titulo_id as t2id, sum(v.cantidad*ti.precio) as cantidad2
+				from ventas as v
+				inner join titulos as ti on ti.titulo_id = v.titulo_id 
+					and ti.titulo<>'Onions, Leeks, and Garlic: Cooking Secrets of the Mediterranean'
+				group by v.titulo_id
+				) as v2
+where v2.cantidad2 >= v1.cantidad1 and t.titulo_id = v2.t2id
+order by t.titulo
 
 /*10.5. Informar los almacenes que hayan vendido más del doble que cualquier otro
 almacén. Mostrar Nombre de almacén y cantidad. Ordenar por mayor venta primero.*/
 
+--sub 1
+select v.almacen_id, al.almacen_nombre, sum(v.cantidad*ti.precio) as total_venta
+from ventas as v, titulos as ti, almacenes as al
+where v.almacen_id = al.almacen_id
+group by v.almacen_id, al.almacen_nombre
+order by total_venta
+
+--consulta
+select distinct a.almacen_id,a.almacen_nombre, a.total_venta
+from (select v.almacen_id, al.almacen_nombre, sum(v.cantidad*ti.precio) as total_venta
+		from ventas as v, titulos as ti, almacenes as al
+		where v.almacen_id = al.almacen_id
+		group by v.almacen_id, al.almacen_nombre
+		) as a, (select v.almacen_id, al.almacen_nombre, sum(v.cantidad*ti.precio) as total_venta
+			from ventas as v, titulos as ti, almacenes as al
+			where v.almacen_id = al.almacen_id
+			group by v.almacen_id, al.almacen_nombre
+			) as b
+where a.total_venta > b.total_venta*2 and a.almacen_id<>b.almacen_id
+order by a.total_venta
+---------------------------------------------------------------------------------------------------------
+select a.almacen_id,a.almacen_nombre, a.total_venta
+from (select v.almacen_id, al.almacen_nombre, sum(v.cantidad*ti.precio) as total_venta
+		from ventas as v, titulos as ti, almacenes as al
+		where v.almacen_id = al.almacen_id
+		group by v.almacen_id, al.almacen_nombre
+		) as a, (select v.almacen_id, al.almacen_nombre, sum(v.cantidad*ti.precio) as total_venta
+			from ventas as v, titulos as ti, almacenes as al
+			where v.almacen_id = al.almacen_id
+			group by v.almacen_id, al.almacen_nombre
+			) as b
+where a.total_venta > b.total_venta*2 and a.almacen_id<>b.almacen_id
+group by a.almacen_id,a.almacen_nombre, a.total_venta
+order by a.total_venta
+
 /*10.6. Informar el almacén o los almacenes que haya vendido más que todos los
 otros. Mostrar Nombre de almacén y cantidad.*/
+
 
 /*10.7. Informar el o los títulos que se vendieron más que cualquier otro con forma de
 pago a 60 días.*/
