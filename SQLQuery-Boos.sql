@@ -862,19 +862,91 @@ order by total_cantidad desc
 /*10.6. Informar el almacén o los almacenes que haya vendido más que todos los
 otros. Mostrar Nombre de almacén y cantidad.*/
 
+select a1.almacen_nombre, vendido = SUM(v1.cantidad)
+from ventas as v1
+inner join almacenes as a1 on v1.almacen_id = a1.almacen_id
+group by a1.almacen_id, a1.almacen_nombre
+having SUM(v1.cantidad) >= all(
+	select cantidad_vendida = SUM(v.cantidad) 
+	from ventas as v
+	inner join almacenes as a on v.almacen_id = a.almacen_id 
+	group by a.almacen_id
+	)
 
 /*10.7. Informar el o los títulos que se vendieron más que cualquier otro con forma de
 pago a 60 días.*/
 
+select *
+from ventas
+
+select t.titulo_id, t.titulo,titulos_vendidos = SUM(v.cantidad)
+from ventas as v
+inner join titulos as t on v.titulo_id = t.titulo_id and v.forma_pago = '60 días'
+group by t.titulo_id, t.titulo
+having SUM(v.cantidad) >= all(
+	select titulos_vendidos = SUM(v1.cantidad)
+	from ventas as v1
+	inner join titulos as t1 on v1.titulo_id = t1.titulo_id and v1.forma_pago = '60 días'
+	group by t1.titulo_id
+	)
+
 /*10.8. Informar cuantos títulos tiene cada autor. Mostrar código de autor, nombre,
 apellido y cantidad de libros.*/
 
+--esta consigna es la que va en la serio 8? o algo asi xd
+
+--select xd.autor_id, xd.autor_nombre, xd.autor_apellido ,total_titulos = count(ta.titulo_id)
+--from (--aca lo que hace es minimizar los datos de la tabla
+--	select autor_id, autor_nombre, autor_apellido
+--	from autores
+--	) as xd
+--left join titulo_autor as ta on ta.autor_id = xd.autor_id
+--group by xd.autor_id, xd.autor_nombre, xd.autor_apellido
+
 /*10.9. Informar el nivel de cargo más alto alcanzado por algún empleado de cada
-editor. Mostrar Nombre del editor y nivel de cargo. Ordenar por nivel de cargo
+editorial. Mostrar Nombre de la editorial y nivel de cargo. Ordenar por nivel de cargo
 máximo empezando por el mayor.*/
+
+select *
+from empleados --43 empleados
+
+select *
+from editoriales --8 editoriales
+
+select e.editorial_id, e.editorial_nombre, nv.maximo_nivel_cargo
+from editoriales as e
+inner join (
+	select editorial_id, max(nivel_cargo) as maximo_nivel_cargo
+	from empleados
+	group by editorial_id
+	) as nv on e.editorial_id = nv.editorial_id
+order by nv.maximo_nivel_cargo desc
 
 /*10.10. Mostrar los tres primeros géneros más vendidos. Mostrar género y total de
 ventas ordenado por mayor total de venta.*/
+
+--total ventas en cantidad o en pasta?
+
+select distinct genero
+from titulos --6 generos
+
+select top 3 t.genero, total_ventas = sum(v.cantidad*t.precio)
+from titulos as t
+inner join /*ventas*/(
+	select titulo_id, cantidad
+	from ventas
+	) as v on t.titulo_id = v.titulo_id
+group by t.genero
+order by total_ventas desc
+
+select top 3 t.genero, total_ventas = sum(v.cantidad)
+from titulos as t
+inner join /*ventas*/(
+	select titulo_id, cantidad
+	from ventas
+	) as v on t.titulo_id = v.titulo_id
+group by t.genero
+order by total_ventas desc
 
 /*10.11. Informar los autores que hayan escrito varios géneros de títulos. Mostrar
 nombre y cantidad de géneros ordenados por esta última columna empezando por el
@@ -890,8 +962,42 @@ apellido y nombre del autor y monto a pagar. Tener en cuenta que hay que operar 
 regalía del título y sobre esta la regalía del autor respecto a ese libro.*/
 
 --11. Serie libre
-/*11.1. Informar las editoriales que tengan solo tengan como empleado un editor y
+/*11.1. Informar las editoriales que solo tengan como empleado un editor y
 ningún otro cargo.*/
+
+--cuento cantidad de empleados
+--tengo las editoriales que tienen un solo empleado
+--en este caso da la casualidad que justo todas estas 
+--tienen contratado un editor
+select ed.editorial_id--, count(em.empleado_id) as cantidad_cargos
+from editoriales as ed
+inner join empleados as em on em.editorial_id = ed.editorial_id
+--inner join cargos as c on c.cargo_id = em.cargo_id --and cargo_descripcion = 'Editor'
+group by ed.editorial_id
+having count(em.empleado_id) = 1
+-----------------------------
+
+--esto me dice que hay 7 editores en total
+--de cualquier editorial
+select cargo_descripcion, count(e.empleado_id)
+from empleados as e
+inner join cargos as c on c.cargo_id = e.cargo_id and c.cargo_descripcion = 'Editor'
+group by c.cargo_descripcion
+------------------------------------------
+
+--el id de cargo editor
+select cargo_id
+from cargos
+where cargo_descripcion = 'Editor'
+-----------------------
+
+--aca muestra a las editoriales sus empleados y cargos
+select ed.editorial_nombre, em.empleado_id, c.cargo_descripcion
+from editoriales as ed
+inner join empleados as em on em.editorial_id = ed.editorial_id
+inner join cargos as c on c.cargo_id = em.cargo_id
+order by ed.editorial_nombre
+------------------------------------------------------
 
 /*11.2. Listar los almacenes que vendieron todos los títulos. Mostrar nombre de
 almacén.*/
@@ -924,7 +1030,30 @@ almacén o autor) y la cantidad.*/
 2354, CP 10445 y el segundo teléfono 011-4554-7856, dirección Av. De Mayo 564, CP
 10056. Ambos viven en C.A.B.A. (BA) y están contratados.*/
 
+select *
+from autores
+order by estado
+
+--el numero de telefono 13 trunca char(12)
+insert into autores
+values('541-54-5643','Facundo','Manes','011-4515-9897','Av. Libertador 2354','C.A.B.A.','BA','10445',1),
+	  ('541-25-5641','Mateo','Niro','011-4554-7856','Av. De Mayo 564','C.A.B.A.','BA','10056',1)
+
+select *--delete
+from autores
+where autor_id = '541-54-5643' or autor_id = '541-25-5641'
+
 /*12.2. Agregar la editorial Planeta (id 5684) ubicada en C.A.B.A. (BA), Argentina.*/
+
+select *
+from editoriales
+
+insert into editoriales
+values('5684','Planeta','C.A.B.A.','BA','Argentina')
+
+select *--delete
+from editoriales
+where editorial_id = 5684
 
 /*12.3. Agregar el título Usar el cerebro, ID NC5001, género Neurociencia, de la
 editorial Planeta, precio $12, adelanto $3000, regalías 18%, publicado el 1º de marzo
