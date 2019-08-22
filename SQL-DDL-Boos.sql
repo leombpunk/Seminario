@@ -105,3 +105,268 @@ values(11)
 select * 
 from Movimientos
 -----------------------
+alter table Operaciones
+drop column Operando
+
+alter table Operaciones
+add Operando char(1) default '+'
+
+insert into Operaciones(IdOperacion,Descripcion)
+values(1,'operacion123')
+
+alter table Operaciones
+drop column Descripcion
+
+alter table Operaciones
+add Descripcion varchar(30) default 'ingreso'
+
+insert into Operaciones(IdOperacion)
+values(2)
+
+insert into Operaciones(IdOperacion,Operando)
+values(3,'-')
+
+select * 
+from Operaciones
+-----------------------
+/*1.3. Establecer columna identidad en las siguientes tablas: Rubros, Movimientos y
+Operaciones. Probar mediante comandos insert que ignoran estas columnas.*/
+alter table Rubros
+drop column Idrubro
+
+alter table Rubros
+add Idrubro smallint identity
+
+insert into Rubros
+values('dudosa procedencia')
+
+insert into Rubros
+values('carne')
+
+select *
+from Rubros
+-----------------------
+alter table Movimientos
+drop column IdMovimiento
+
+alter table Movimientos
+add IdMovimiento int identity
+
+insert into Movimientos
+values(10)
+
+insert into Movimientos
+values(25)
+
+insert into Movimientos
+values(32,'2019-07-12')
+
+insert into Movimientos
+values(12,30,'2019-06-10')
+
+select *
+from Movimientos
+-----------------------
+alter table Operaciones
+drop column IdOperacion
+
+alter table Operaciones
+add IdOperacion tinyint identity
+
+insert into Operaciones(Descripcion,Operando)
+values('egreso','+')
+
+insert into Operaciones(Descripcion,Operando)
+values('ingreso','-')
+
+select *
+from Operaciones
+-----------------------
+/*1.4. Establecer las siguientes columnas para que no admitan nulos. Probar con insert que
+ignoran estas columnas.*/
+alter table Rubros
+alter column Descripcion varchar(30) NOT NULL 
+
+insert into Rubros(Descripcion)
+values(null)
+
+insert into Rubros(Descripcion)
+values('lacteos')
+
+insert into Rubros(Descripcion)
+values('legumbres')
+
+select *
+from Rubros
+-----------------------
+alter table Articulos
+alter column IdArticulo char(5) NOT NULL
+
+alter table Articulos
+alter column Nombre varchar(30) NOT NULL
+
+alter table Articulos
+alter column Precio decimal(10,2) NOT NULL
+
+insert into Articulos
+values(null,null,null)
+
+insert into Articulos
+values('ac158','articulo-1',25.99)
+
+select *
+from Articulos
+-----------------------
+alter table Stock
+alter column Cantidad smallint NOT NULL
+
+insert into Stock
+values(null)
+
+insert into Stock
+values(99)
+
+select *
+from Stock
+-----------------------
+alter table Depositos
+alter column IdDeposito char(3) NOT NULL
+
+alter table Depositos
+alter column Nombre varchar(50) NOT NULL
+
+insert into Depositos
+values(null,'deposito-1')
+
+insert into Depositos
+values('1',null)
+
+insert into Depositos
+values('1','Deposito-2')
+
+select *
+from Depositos
+-----------------------
+/*1.7. Implementar las restricciones anteriores con cláusulas “constraint” y dando el nombre
+según las convenciones conocidas.
+1.5. Establecer que las siguientes columnas solo admitan las siguientes reglas dominios de
+valores.*/
+alter table Rubros
+add constraint ck_descripcion_minima check(Descripcion like '[A-Z,0-9][A-Z,0-9][A-Z,0-9]%')
+
+insert into Rubros
+values('la')
+
+insert into Rubros
+values('?la')
+
+insert into Rubros
+values('l?a')
+
+insert into Rubros
+values('asd')
+
+insert into Rubros
+values('bebidas')
+
+select *
+from Rubros
+-----------------------
+alter table Articulos
+add constraint ck_idarticulo_valido check(IdArticulo collate Modern_Spanish_CS_AS like '[A-Z][A-Z][0-9][0-9][0-9]')
+--no deja aplicar el constraint check porque el unico articulo tenia el idarticulo en minusculas xd
+--update Articulos set IdArticulo = UPPER(IdArticulo)
+
+alter table Articulos
+add constraint ck_nombre_valido check(Nombre like '[A-Z,0-9][A-Z,0-9][A-Z,0-9]%')
+
+alter table Articulos
+add constraint ck_precio_mayorcero check(Precio > 0)
+
+insert into Articulos(IdArticulo,Nombre,Precio)
+values('as456','falopita',-1)
+
+insert into Articulos(IdArticulo,Nombre,Precio)
+values('AS456','pastafrola',100)
+
+select * 
+from Articulos
+-----------------------
+alter table Stock
+add constraint ck_cantidad_mayorcero check( Cantidad > 0)
+
+insert into Stock
+values(-5)
+
+insert into Stock
+values(5)
+
+select *
+from Stock
+-----------------------
+alter table Depositos
+add constraint ck_iddeposito_valido check(IdDeposito like '[A-Z][0-9]_')
+
+alter table Depositos
+add constraint ck_nombre_valido check(Nombre like '[A-Z,0-9][A-Z,0-9][A-Z,0-9]%')
+
+insert into Depositos(IdDeposito,Nombre)
+values('a','desposito mal escrito')
+
+insert into Depositos(IdDeposito,Nombre)
+values('a9?','khe guen kodigo')
+
+select * 
+from Depositos
+
+--update Depositos set IdDeposito = 'a3p'
+--where Nombre like '%o'
+-----------------------
+alter table Movimientos
+add constraint ck_cantidad_mayorcero check(Cantidad > 0)
+
+alter table Movimientos
+add constraint ck_fecha_valida check(Fecha between getdate()-7 and getdate())
+
+insert into Movimientos(Cantidad,Fecha)
+values(-1,'2019/08/22')
+
+insert into Movimientos(Cantidad,Fecha)
+values(15,'2019/08/14')
+
+insert into Movimientos(Cantidad,Fecha)
+values(1,getdate())
+
+select *
+from Movimientos
+
+--select getdate()-7
+
+--update Movimientos set Fecha = getdate()
+
+--update Movimientos set Cantidad = 2
+--where IdMovimiento = 1
+-----------------------
+alter table Operaciones
+add constraint ck_operando_valido check(Operando in('+','-'))
+
+alter table Operaciones
+add constraint ck_descripcion_valida check(Descripcion like '[A-Z,0-9][A-Z,0-9][A-Z,0-9]%')
+
+insert into Operaciones(Operando,Descripcion)
+values('?','jajaajaja')
+
+insert into Operaciones(Operando,Descripcion)
+values('-','salida')
+
+select *
+from Operaciones
+
+/*update Operaciones set Descripcion = 'asd'
+where IdOperacion = 2*/
+-----------------------
+/*1.7. Implementar las restricciones anteriores con cláusulas “constraint” y dando el nombre
+según las convenciones conocidas.
+1.6. Establecer regla de valores únicos para las siguientes columnas*/
+
+-----------------------
