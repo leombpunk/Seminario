@@ -368,5 +368,150 @@ where IdOperacion = 2*/
 /*1.7. Implementar las restricciones anteriores con cláusulas “constraint” y dando el nombre
 según las convenciones conocidas.
 1.6. Establecer regla de valores únicos para las siguientes columnas*/
+select * 
+from Articulos
+
+alter table Articulos
+add constraint UqNombreArticulo unique(Nombre)
+
+insert into Articulos
+values('DC654','pastafrola',50)
+
+exec sp_help Articulos
+-----------------------
+select * 
+from Depositos
+
+alter table Depositos
+add constraint UqNombreDeposito unique(Nombre)
+
+insert into Depositos
+values('b2o','desposito mal escrito')
+
+exec sp_help Depositos
+-----------------------
+select *
+from Operaciones
+
+alter table Operaciones
+add constraint UqDescripcionOperanciones unique(Descripcion)
+
+insert into Depositos
+values('b2o','desposito mal escrito')
+
+exec sp_help Depositos
+/*Operaciones tiene como valor predeterminado para descripcion 'ingreso'
+con lo que solo va aceptar un insert por valor predeterminado de descripcion
+despues se vienen los errores copados, como ya tengo datos cargados conviene
+hacer un drop table y crearla de nuevo*/
+-----------------------
+/*1.8. Crear las claves primarias en las siguientes columnas:*/
+select * 
+from Rubros
+
+exec sp_help Rubros
+
+alter table Rubros
+add constraint PkIdrubro primary key(Idrubro)
+
+--set identity_insert Rubros on
+--set identity_insert Rubros off
+
+insert into Rubros(Idrubro,Descripcion)
+values(2,'rubro 9')
+-----------------------
+select *
+from Articulos
+
+alter table Articulos
+add constraint PkIdArticulo primary key(IdArticulo)
+
+insert into Articulos(IdArticulo,Nombre,Precio)
+values('AC158','caja sorpresa',100000)
+-----------------------
+select *
+from Depositos
+
+alter table Depositos
+add constraint PkIdDeposito primary key(IdDeposito)
+
+insert into Depositos
+values('a2p','ya existe el id')
+-----------------------
+select *
+from Movimientos
+
+--set identity_insert Movimientos on
+--set identity_insert Movimientos off
+
+alter table Movimientos
+add constraint PkIdMovimiento primary key(IdMovimiento)
+
+insert into Movimientos(IdMovimiento,Fecha,Cantidad)
+values(2,GETDATE(),10)
+-----------------------
+select *
+from Operaciones
+
+--set identity_insert Operaciones on
+--set identity_insert Operaciones off
+
+alter table Operaciones
+add constraint PkIdOperacion primary key(IdOperacion)
+
+insert into Operaciones(IdOperacion,Descripcion,Operando)
+values(1,'no hago nada','-')
+-----------------------
+/*1.9. Crear las columnas y sus claves foráneas, establecer que estas columnas no acepten
+valores nulos y probar con Insert caso éxito y falla para las siguientes relaciones:*/
+/*
+Entidad fuerte		Entidad debil
+---------------------------------
+Rubros				Articulos
+Articulos			Stock
+Articulos			Movimientos
+Depositos			Stock
+Depositos			Movimientos
+Operaciones			Movimientos
+*/
+exec sp_help Rubros
+
+select * 
+from Rubros
+
+select * 
+from Articulos
+
+alter table Articulos
+add Idrubro smallint
+--drop column Idrubro
+
+update Articulos set Idrubro = 2
+
+alter table Articulos
+alter column Idrubro smallint not null
+
+alter table Articulos
+add constraint fkIdrubro foreign key (Idrubro) 
+references Rubros(Idrubro)
+
+insert into Articulos(IdArticulo,Nombre,Precio,Idrubro)
+values('PP123','fideo',60,4)
+
+insert into Articulos(IdArticulo,Nombre,Precio,Idrubro)
+values('PP123','fideo',60,2)
+-----------------------
+
+-----------------------
+
+-----------------------
+
+-----------------------
+
+-----------------------
+
+-----------------------
+/*1.10. Crear índices para las columnas de clave foránea en las entidades débiles y para las
+siguientes columnas*/
 
 -----------------------
